@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>和平島畢業生・島嶼探險任務</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+:root {
+  --abyss:   #122c34;   /* deep sea, edges */
+  --sea:     #1b424c;   /* mid sea */
+  --shallow: #285a60;   /* shallow water, centre (map shows through) */
+  --rhumb:   #d8c79a;   /* faded chart linework (cream) */
+  --brass:   #c9a14a;   /* compass brass / accents */
+  --oxblood: #a8371d;   /* one accent: compass heart + X marks */
+  --parch:   #EED98A;   /* parchment cards */
+  --ink:     #3D2800;   /* card ink */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background:
+    radial-gradient(120% 80% at 50% 38%, var(--shallow) 0%, var(--sea) 46%, var(--abyss) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 28px 16px 64px;
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  position: relative;
+}
+
+/* ── Ambient sea-chart background (the signature) ── */
+.map-bg {
+  position: fixed; inset: 0; z-index: -1;
+  pointer-events: none; overflow: hidden;
+}
+.map-bg svg { width: 100%; height: 100%; display: block; }
+/* paper grain + soft vignette layered over the chart */
+.map-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(130% 95% at 50% 40%, transparent 52%, rgba(8,22,26,0.55) 100%);
+  mix-blend-mode: multiply;
+}
+
+/* ── Screens ── */
+.screen { display: none; width: 100%; max-width: 680px; flex-direction: column; align-items: center; }
+.screen.active { display: flex; }
+
+/* ── Parchment ── */
+.parchment {
+  width: 100%;
+  background: #EED98A;
+  border: 3px solid #8B6914;
+  border-radius: 6px;
+  box-shadow: inset 0 0 50px rgba(100,70,20,0.25), inset 0 0 12px rgba(80,50,10,0.14), 0 12px 44px rgba(0,0,0,0.58), 0 1px 0 rgba(255,244,210,0.18);
+  position: relative;
+}
+.parchment::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 29px, rgba(150,110,50,0.055) 29px, rgba(150,110,50,0.055) 30px);
+  border-radius: 4px; pointer-events: none; z-index: 1;
+}
+.parchment-inner { position: relative; z-index: 2; padding: 32px 36px 28px; }
+
+.corner { position: absolute; width: 26px; height: 26px; z-index: 3; }
+.corner.tl { top: 7px; left: 7px; }
+.corner.tr { top: 7px; right: 7px; transform: scaleX(-1); }
+.corner.bl { bottom: 7px; left: 7px; transform: scaleY(-1); }
+.corner.br { bottom: 7px; right: 7px; transform: scale(-1,-1); }
+
+/* ── COVER ── */
+.cover-rule { width: 100%; border: none; border-top: 2px solid #8B6914; }
+.cover-bracket-row { display: flex; align-items: center; width: 100%; justify-content: space-between; padding: 4px 0; }
+.cover-bracket { color: #A07A1E; font-family: 'Cinzel', serif; font-size: 22px; font-weight: 800; }
+.cover-main-title { font-family: 'Noto Serif TC', serif; font-size: 22px; font-weight: 900; color: #3D2800; letter-spacing: 0.12em; text-align: center; flex: 1; text-shadow: 0 1px 0 rgba(255,250,230,0.55), 0 -1px 0 rgba(90,56,0,0.16); }
+.cover-sub-title { font-family: 'Noto Serif TC', serif; font-size: 18px; font-weight: 700; color: #5A3800; letter-spacing: 0.08em; text-align: center; flex: 1; }
+.cover-divider { width: 75%; border: none; border-top: 1px dashed rgba(100,65,15,0.38); margin: 18px 0 16px; }
+.cover-intro { font-family: 'Noto Serif TC', serif; font-size: 14.5px; color: #3D2800; line-height: 2.1; width: 100%; margin-bottom: 18px; }
+.cover-rules-title { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; color: #7A5010; margin-bottom: 10px; width: 100%; }
+.cover-rule-item { display: flex; gap: 10px; font-family: 'Noto Serif TC', serif; font-size: 14px; color: #3D2800; line-height: 1.9; width: 100%; margin-bottom: 5px; align-items: flex-start; }
+.rule-num { background: #6B4C0E; color: #F5E4A0; font-size: 11px; font-weight: 700; width: 20px; height: 20px; border-radius: 2px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 4px; }
+.prophecy-box { width: 100%; border: 1.5px solid rgba(100,65,15,0.35); border-radius: 4px; padding: 13px 20px; margin: 16px 0 18px; background: rgba(100,65,15,0.07); }
+.prophecy-text { font-family: 'Noto Serif TC', serif; font-size: 14.5px; font-weight: 700; color: #5A3800; line-height: 1.9; text-align: center; }
+.startpoint { display: flex; align-items: center; gap: 10px; background: #6B4C0E; color: #F5E4A0; border-radius: 3px; padding: 7px 18px; font-family: 'Noto Serif TC', serif; font-size: 14px; font-weight: 700; margin-bottom: 22px; }
+
+.btn-main { background: #6B4C0E; color: #F5E4A0; border: 2px solid #A07020; border-radius: 4px; padding: 12px 36px; font-family: 'Noto Serif TC', serif; font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: 0.12em; transition: background 0.2s; }
+.btn-main:hover { background: #8B6214; }
+
+/* ── MAP / OVERVIEW ── */
+#map { gap: 16px; }
+
+.map-header { font-family: 'Cinzel','Noto Serif TC', serif; font-size: 13px; font-weight: 700; letter-spacing: 0.22em; color: #E6D4A0; margin-bottom: 4px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 14px; text-shadow: 0 1px 4px rgba(0,0,0,0.45); }
+.map-header::before, .map-header::after { content: ''; height: 1px; width: 46px; background: linear-gradient(90deg, transparent, rgba(201,161,74,0.75)); }
+.map-header::after { transform: scaleX(-1); }
+
+.stages-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; margin-bottom: 12px; }
+.stages-row2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 66%; margin: 0 auto 16px; }
+
+.stage-tile {
+  background: #EED98A;
+  border: 2px solid #8B6914;
+  border-radius: 6px;
+  padding: 16px 10px 14px;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.stage-tile:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(0,0,0,0.5); }
+.stage-tile.done { border-color: #4A8A30; background: #DFF0C8; }
+.tile-num { font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #7A5010; letter-spacing: 0.18em; }
+.tile-silhouette { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; }
+.tile-silhouette svg { fill: #6B4C0E; transition: fill 0.3s; }
+.stage-tile.done .tile-silhouette svg { fill: #3A6A28; }
+.tile-check { font-size: 16px; position: absolute; top: 5px; right: 7px; display: none; }
+
+.progress-bar-wrap { width: 100%; background: rgba(139,105,20,0.2); border-radius: 4px; height: 8px; margin-bottom: 4px; }
+.progress-bar-fill { height: 8px; background: #6B4C0E; border-radius: 4px; transition: width 0.6s ease; }
+.progress-label { font-family: 'Cinzel','Noto Serif TC', serif; font-size: 12px; color: #E6D4A0; text-align: center; letter-spacing: 0.04em; }
+
+/* ── DETAIL PANEL (modal-style overlay) ── */
+.detail-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(10,6,2,0.88); z-index: 50;
+  align-items: center; justify-content: center; padding: 16px;
+  overflow-y: auto;
+}
+.detail-overlay.show { display: flex; }
+
+.detail-card {
+  background: #EED98A; border: 3px solid #8B6914; border-radius: 6px;
+  max-width: 520px; width: 100%; position: relative;
+  box-shadow: inset 0 0 40px rgba(100,70,20,0.22), 0 16px 48px rgba(0,0,0,0.6);
+  max-height: 90vh; overflow-y: auto;
+}
+.detail-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 29px, rgba(150,110,50,0.055) 29px, rgba(150,110,50,0.055) 30px);
+  border-radius: 4px; pointer-events: none; z-index: 1;
+}
+.detail-inner { position: relative; z-index: 2; padding: 28px 28px 24px; }
+
+.detail-close { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 20px; color: #7A5010; cursor: pointer; z-index: 10; line-height: 1; }
+.detail-close:hover { color: #3D2800; }
+
+.stage-badge { display: inline-flex; align-items: center; gap: 6px; background: #6B4C0E; color: #F5E4A0; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; letter-spacing: 0.18em; padding: 4px 11px; border-radius: 2px; width: fit-content; margin-bottom: 9px; box-shadow: 0 1px 0 rgba(255,235,170,0.25) inset; }
+.card-title { font-family: 'Noto Serif TC', serif; font-size: 22px; font-weight: 900; color: #3D2800; line-height: 1.3; margin-bottom: 12px; border-bottom: 1.5px solid rgba(100,65,15,0.28); padding-bottom: 11px; text-shadow: 0 1px 0 rgba(255,250,230,0.5); }
+
+.riddle-box { background: rgba(100,65,15,0.07); border: 1.5px solid rgba(100,65,15,0.22); border-radius: 4px; padding: 13px 15px; margin-bottom: 14px; }
+.riddle-label { font-size: 10px; font-weight: 700; letter-spacing: 0.22em; color: #7A5010; margin-bottom: 7px; }
+.clue-line { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 6px; font-size: 14px; font-family: 'Noto Serif TC', serif; color: #3D2800; line-height: 1.85; }
+.clue-bullet { color: #8B6914; flex-shrink: 0; }
+
+/* answer */
+.answer-area { border-top: 1.5px solid rgba(100,65,15,0.22); padding-top: 12px; margin-bottom: 0; }
+.answer-label { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: #7A5010; margin-bottom: 8px; }
+.answer-row { display: flex; gap: 8px; align-items: center; }
+.answer-input { flex: 1; background: rgba(255,255,255,0.45); border: 1.5px solid rgba(100,65,15,0.35); border-radius: 3px; padding: 8px 12px; font-family: 'Noto Serif TC', serif; font-size: 15px; color: #3D2800; outline: none; transition: border-color 0.2s; }
+.answer-input:focus { border-color: #8B6914; background: rgba(255,255,255,0.65); }
+.answer-input.error { border-color: #C03010; background: rgba(255,200,180,0.3); }
+.answer-input.correct { border-color: #3A7A30; background: rgba(180,240,180,0.3); }
+.answer-input:disabled { opacity: 0.7; cursor: not-allowed; }
+.btn-submit { background: #6B4C0E; color: #F5E4A0; border: 1.5px solid #A07020; border-radius: 3px; padding: 8px 16px; font-family: 'Noto Serif TC', serif; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+.btn-submit:hover { background: #8B6214; }
+.error-msg { font-size: 12px; color: #C03010; margin-top: 6px; font-family: 'Noto Serif TC', serif; min-height: 18px; }
+
+/* unlocked illustration */
+.illus-reveal { display: none; flex-direction: column; align-items: center; padding: 16px 0 8px; gap: 8px; }
+.illus-reveal.show { display: flex; }
+.illus-reveal svg { filter: drop-shadow(1px 2px 4px rgba(80,50,10,0.3)); animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+
+.tile-mystery { font-family: 'Noto Serif TC', serif; font-size: 10px; color: #8B6914; opacity: 0.7; letter-spacing: 0.05em; }
+.tile-check { font-size: 15px; position: absolute; top: 5px; right: 7px; display: none; }
+.stage-tile.done .tile-mystery { opacity: 0; }
+
+
+/* ── UNLOCK ANIMATION ── */
+.unlock-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(5,3,1,0.92); z-index: 150;
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 20px;
+}
+.unlock-overlay.show { display: flex; }
+.lock-wrap { position: relative; width: 120px; height: 120px; }
+.lock-svg { animation: lockShake 0.4s ease 0.2s; }
+@keyframes lockShake {
+  0%,100%{ transform: rotate(0deg); }
+  25%{ transform: rotate(-8deg); }
+  75%{ transform: rotate(8deg); }
+}
+.lock-glow {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%) scale(0);
+  width: 160px; height: 160px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,200,112,0.6) 0%, transparent 70%);
+  animation: none;
+}
+.lock-glow.burst { animation: glowBurst 0.6s ease forwards; }
+@keyframes glowBurst {
+  0%{ transform: translate(-50%,-50%) scale(0); opacity: 1; }
+  100%{ transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
+}
+.unlock-text {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 22px; font-weight: 900; color: #E8C870;
+  letter-spacing: 0.15em; opacity: 0;
+  animation: none;
+}
+.unlock-text.show { animation: fadeUp 0.5s ease 0.5s forwards; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.unlock-stars {
+  font-size: 28px; letter-spacing: 12px; opacity: 0;
+  animation: none;
+}
+.unlock-stars.show { animation: fadeUp 0.5s ease 0.8s forwards; }
+
+/* solved detail: hide riddle + answer sections */
+.detail-solved .riddle-box { display: none; }
+.detail-solved .answer-area { display: none; }
+
+@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.illus-caption { font-family: 'Noto Serif TC', serif; font-size: 12px; font-weight: 700; color: #7A5010; letter-spacing: 0.08em; opacity: 0.85; }
+
+/* mission box */
+.mission-box { display: none; background: rgba(100,65,15,0.08); border: 1.5px solid rgba(100,65,15,0.3); border-radius: 4px; padding: 14px 16px; margin-top: 14px; }
+.mission-box.show { display: block; }
+.mission-label { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; color: #7A5010; margin-bottom: 8px; }
+.mission-text { font-family: 'Noto Serif TC', serif; font-size: 14.5px; color: #3D2800; line-height: 1.8; margin-bottom: 12px; }
+.btn-mission { background: #6B4C0E; color: #F5E4A0; border: 1.5px solid #A07020; border-radius: 3px; padding: 8px 20px; font-family: 'Noto Serif TC', serif; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.2s; }
+.btn-mission:hover { background: #8B6214; }
+.mission-done-text { font-family: 'Noto Serif TC', serif; font-size: 13px; color: #3A7A30; font-weight: 700; text-align: center; display: none; }
+
+/* ── REWARD OVERLAY ── */
+.reward-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(5,3,1,0.92); z-index: 200;
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.reward-overlay.show { display: flex; }
+
+.reward-card {
+  background: #EED98A; border: 3px solid #8B6914; border-radius: 8px;
+  max-width: 420px; width: 100%; padding: 32px 28px 28px;
+  text-align: center; position: relative;
+  box-shadow: inset 0 0 40px rgba(100,70,20,0.22), 0 16px 48px rgba(0,0,0,0.7);
+  animation: rewardPop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes rewardPop { from { transform: scale(0.6) rotate(-4deg); opacity: 0; } to { transform: scale(1) rotate(0deg); opacity: 1; } }
+.reward-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 29px, rgba(150,110,50,0.055) 29px, rgba(150,110,50,0.055) 30px);
+  border-radius: 6px; pointer-events: none;
+}
+.reward-inner { position: relative; z-index: 2; }
+.reward-badge { display: inline-block; background: #6B4C0E; color: #F5E4A0; font-size: 11px; font-weight: 700; letter-spacing: 0.18em; padding: 3px 12px; border-radius: 2px; margin-bottom: 12px; font-family: 'Noto Serif TC', serif; }
+.reward-title { font-family: 'Noto Serif TC', serif; font-size: 22px; font-weight: 900; color: #3D2800; margin-bottom: 6px; }
+.reward-subtitle { font-family: 'Noto Serif TC', serif; font-size: 14px; color: #5A3800; margin-bottom: 20px; line-height: 1.7; }
+
+/* drink animation */
+.drink-anim { font-size: 72px; margin: 8px 0 16px; animation: bounce 0.8s ease infinite alternate; display: block; }
+@keyframes bounce { from { transform: translateY(0) rotate(-5deg); } to { transform: translateY(-10px) rotate(5deg); } }
+
+/* food animation */
+.food-row { display: flex; justify-content: center; gap: 12px; margin: 8px 0 16px; }
+.food-item { font-size: 52px; animation: wiggle 1s ease infinite; }
+.food-item:nth-child(1) { animation-delay: 0s; }
+.food-item:nth-child(2) { animation-delay: 0.2s; }
+.food-item:nth-child(3) { animation-delay: 0.4s; }
+@keyframes wiggle { 0%,100% { transform: rotate(-8deg) translateY(0); } 50% { transform: rotate(8deg) translateY(-8px); } }
+
+.reward-note { font-family: 'Noto Serif TC', serif; font-size: 13px; font-weight: 700; color: #6B4C0E; background: rgba(100,65,15,0.1); border-radius: 3px; padding: 8px 14px; margin-bottom: 18px; line-height: 1.7; }
+.btn-reward-close { background: #6B4C0E; color: #F5E4A0; border: 2px solid #A07020; border-radius: 4px; padding: 10px 28px; font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.1em; transition: background 0.2s; }
+.btn-reward-close:hover { background: #8B6214; }
+
+/* ── FINAL OVERLAY ── */
+.final-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(5,3,1,0.95); z-index: 300;
+  flex-direction: column; align-items: center; justify-content: center; padding: 24px;
+}
+.final-overlay.show { display: flex; }
+.final-card {
+  background: #EED98A; border: 3px solid #8B6914; border-radius: 8px;
+  max-width: 480px; width: 100%; padding: 40px 36px 36px;
+  text-align: center; position: relative;
+  box-shadow: inset 0 0 50px rgba(100,70,20,0.25), 0 20px 60px rgba(0,0,0,0.7);
+  animation: rewardPop 0.7s cubic-bezier(0.34,1.56,0.64,1);
+}
+.final-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 29px, rgba(150,110,50,0.055) 29px, rgba(150,110,50,0.055) 30px); border-radius: 6px; pointer-events: none; }
+.final-inner { position: relative; z-index: 2; }
+.final-stars { font-size: 28px; margin-bottom: 10px; letter-spacing: 8px; animation: pulse 1.5s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+.final-title { font-family: 'Noto Serif TC', serif; font-size: 26px; font-weight: 900; color: #3D2800; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1.5px solid rgba(100,65,15,0.28); }
+.final-text { font-family: 'Noto Serif TC', serif; font-size: 14.5px; color: #3D2800; line-height: 2.1; margin-bottom: 24px; }
+.final-stamp { border: 2.5px solid #8B6914; border-radius: 4px; padding: 12px 24px; font-family: 'Noto Serif TC', serif; font-size: 16px; font-weight: 900; color: #6B4C0E; letter-spacing: 0.15em; transform: rotate(-2deg); display: inline-block; margin-bottom: 20px; }
+
+@media (max-width: 500px) {
+  .stages-grid { grid-template-columns: repeat(3, 1fr); }
+  .parchment-inner { padding: 24px 20px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ======== AMBIENT SEA-CHART BACKGROUND ======== -->
+<div class="map-bg" aria-hidden="true">
+<svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+<g stroke="var(--rhumb)" stroke-width="1" opacity="0.07">
+<line x1="0" y1="0" x2="0" y2="800"/>
+<line x1="100" y1="0" x2="100" y2="800"/>
+<line x1="200" y1="0" x2="200" y2="800"/>
+<line x1="300" y1="0" x2="300" y2="800"/>
+<line x1="400" y1="0" x2="400" y2="800"/>
+<line x1="500" y1="0" x2="500" y2="800"/>
+<line x1="600" y1="0" x2="600" y2="800"/>
+<line x1="700" y1="0" x2="700" y2="800"/>
+<line x1="800" y1="0" x2="800" y2="800"/>
+<line x1="900" y1="0" x2="900" y2="800"/>
+<line x1="1000" y1="0" x2="1000" y2="800"/>
+<line x1="1100" y1="0" x2="1100" y2="800"/>
+<line x1="1200" y1="0" x2="1200" y2="800"/>
+<line x1="0" y1="0" x2="1200" y2="0"/>
+<line x1="0" y1="100" x2="1200" y2="100"/>
+<line x1="0" y1="200" x2="1200" y2="200"/>
+<line x1="0" y1="300" x2="1200" y2="300"/>
+<line x1="0" y1="400" x2="1200" y2="400"/>
+<line x1="0" y1="500" x2="1200" y2="500"/>
+<line x1="0" y1="600" x2="1200" y2="600"/>
+<line x1="0" y1="700" x2="1200" y2="700"/>
+<line x1="0" y1="800" x2="1200" y2="800"/>
+</g>
+<g stroke="var(--rhumb)" stroke-width="0.8" opacity="0.09">
+<line x1="-695.0" y1="250.0" x2="2505.0" y2="250.0"/>
+<line x1="-573.2" y1="-362.3" x2="2383.2" y2="862.3"/>
+<line x1="-226.4" y1="-881.4" x2="2036.4" y2="1381.4"/>
+<line x1="292.7" y1="-1228.2" x2="1517.3" y2="1728.2"/>
+<line x1="905.0" y1="-1350.0" x2="905.0" y2="1850.0"/>
+<line x1="1517.3" y1="-1228.2" x2="292.7" y2="1728.2"/>
+<line x1="2036.4" y1="-881.4" x2="-226.4" y2="1381.4"/>
+<line x1="2383.2" y1="-362.3" x2="-573.2" y2="862.3"/>
+<line x1="2505.0" y1="250.0" x2="-695.0" y2="250.0"/>
+<line x1="2383.2" y1="862.3" x2="-573.2" y2="-362.3"/>
+<line x1="2036.4" y1="1381.4" x2="-226.4" y2="-881.4"/>
+<line x1="1517.3" y1="1728.2" x2="292.7" y2="-1228.2"/>
+<line x1="905.0" y1="1850.0" x2="905.0" y2="-1350.0"/>
+<line x1="292.7" y1="1728.2" x2="1517.3" y2="-1228.2"/>
+<line x1="-226.4" y1="1381.4" x2="2036.4" y2="-881.4"/>
+<line x1="-573.2" y1="862.3" x2="2383.2" y2="-362.3"/>
+</g>
+<g stroke="var(--rhumb)" stroke-width="0.8" opacity="0.07">
+<line x1="-1345.0" y1="585.0" x2="1855.0" y2="585.0"/>
+<line x1="-1223.2" y1="-27.3" x2="1733.2" y2="1197.3"/>
+<line x1="-876.4" y1="-546.4" x2="1386.4" y2="1716.4"/>
+<line x1="-357.3" y1="-893.2" x2="867.3" y2="2063.2"/>
+<line x1="255.0" y1="-1015.0" x2="255.0" y2="2185.0"/>
+<line x1="867.3" y1="-893.2" x2="-357.3" y2="2063.2"/>
+<line x1="1386.4" y1="-546.4" x2="-876.4" y2="1716.4"/>
+<line x1="1733.2" y1="-27.3" x2="-1223.2" y2="1197.3"/>
+<line x1="1855.0" y1="585.0" x2="-1345.0" y2="585.0"/>
+<line x1="1733.2" y1="1197.3" x2="-1223.2" y2="-27.3"/>
+<line x1="1386.4" y1="1716.4" x2="-876.4" y2="-546.4"/>
+<line x1="867.3" y1="2063.2" x2="-357.3" y2="-893.2"/>
+<line x1="255.0" y1="2185.0" x2="255.0" y2="-1015.0"/>
+<line x1="-357.3" y1="2063.2" x2="867.3" y2="-893.2"/>
+<line x1="-876.4" y1="1716.4" x2="1386.4" y2="-546.4"/>
+<line x1="-1223.2" y1="1197.3" x2="1733.2" y2="-27.3"/>
+</g>
+<g opacity="1">
+  <path d="M360 250 Q400 205 470 220 Q540 232 560 285 Q582 340 540 372
+           Q500 402 440 392 Q372 382 350 332 Q332 290 360 250 Z"
+        fill="var(--rhumb)" fill-opacity="0.05" stroke="var(--rhumb)" stroke-opacity="0.20" stroke-width="1.5"/>
+  <path d="M345 312 Q400 425 460 470 Q520 432 560 372"
+        fill="none" stroke="var(--rhumb)" stroke-opacity="0.10" stroke-width="1.4" stroke-dasharray="1,6" stroke-linecap="round"/>
+  <path d="M330 240 Q396 188 476 204 Q568 222 590 290"
+        fill="none" stroke="var(--rhumb)" stroke-opacity="0.10" stroke-width="1.4" stroke-dasharray="1,6" stroke-linecap="round"/>
+  <!-- hill hatching -->
+  <g stroke="var(--rhumb)" stroke-opacity="0.16" stroke-width="1">
+    <line x1="430" y1="300" x2="424" y2="284"/><line x1="442" y1="300" x2="438" y2="282"/>
+    <line x1="454" y1="302" x2="452" y2="284"/><line x1="466" y1="306" x2="468" y2="288"/>
+    <line x1="418" y1="306" x2="408" y2="294"/>
+  </g>
+  <text x="402" y="346" font-family="Cinzel, serif" font-size="18" letter-spacing="3"
+        fill="var(--rhumb)" fill-opacity="0.22" font-weight="600">HEPING I.</text>
+  <!-- depth soundings -->
+  <g font-family="Cinzel, serif" font-size="11" fill="var(--rhumb)" fill-opacity="0.16">
+    <text x="300" y="430">7</text><text x="610" y="300">12</text>
+    <text x="330" y="180">5</text><text x="640" y="420">18</text>
+    <text x="280" y="300">9</text>
+  </g>
+</g>
+<g>
+  <path d="M470 392 Q520 470 560 560 Q575 600 600 632"
+        fill="none" stroke="var(--oxblood)" stroke-opacity="0.30" stroke-width="2"
+        stroke-dasharray="2,9" stroke-linecap="round"/>
+  <g stroke="var(--oxblood)" stroke-opacity="0.55" stroke-width="3.4" stroke-linecap="round">
+    <line x1="588" y1="624" x2="616" y2="652"/>
+    <line x1="616" y1="624" x2="588" y2="652"/>
+  </g>
+</g>
+<g transform="translate(745,612)" stroke="var(--rhumb)" stroke-opacity="0.18" stroke-width="1.4" fill="none">
+  <path d="M-46 18 Q-30 40 0 42 Q30 40 46 18 Z" fill="var(--rhumb)" fill-opacity="0.05"/>
+  <line x1="-46" y1="18" x2="46" y2="18"/>
+  <!-- masts -->
+  <line x1="-22" y1="18" x2="-22" y2="-40"/>
+  <line x1="2"   y1="18" x2="2"   y2="-54"/>
+  <line x1="26"  y1="18" x2="26"  y2="-36"/>
+  <!-- sails -->
+  <path d="M-22 -36 Q-40 -22 -22 -6 Z" fill="var(--rhumb)" fill-opacity="0.06"/>
+  <path d="M-22 -36 Q-4 -22 -22 -6"/>
+  <path d="M2 -50 Q-18 -32 2 -14 Z" fill="var(--rhumb)" fill-opacity="0.06"/>
+  <path d="M2 -50 Q22 -32 2 -14"/>
+  <path d="M26 -32 Q42 -20 26 -8 Z" fill="var(--rhumb)" fill-opacity="0.06"/>
+  <path d="M26 -32 Q10 -20 26 -8"/>
+  <!-- flag -->
+  <path d="M2 -54 L18 -50 L2 -46 Z" fill="var(--oxblood)" fill-opacity="0.40" stroke="none"/>
+</g>
+<g transform="translate(990,560)" stroke="var(--rhumb)" stroke-opacity="0.11" stroke-width="2" fill="none" stroke-linecap="round">
+  <path d="M0 0 Q24 -22 48 0 Q72 22 96 0 Q120 -22 140 -6"/>
+  <path d="M0 0 q-10 -8 -18 -4 q6 -2 10 4 q-8 0 -10 6"/>
+  <circle cx="-12" cy="-2" r="1.6" fill="var(--rhumb)" fill-opacity="0.2" stroke="none"/>
+</g>
+<g stroke="var(--rhumb)" stroke-opacity="0.08" stroke-width="1.4" fill="none" stroke-linecap="round">
+  <path d="M120 700 q14 -10 28 0 q14 10 28 0"/>
+  <path d="M180 730 q14 -10 28 0 q14 10 28 0"/>
+  <path d="M980 180 q14 -10 28 0 q14 10 28 0"/>
+  <path d="M1040 150 q14 -10 28 0 q14 10 28 0"/>
+  <path d="M60 470 q14 -10 28 0 q14 10 28 0"/>
+</g>
+<g transform="translate(905,250)">
+<circle r="150" fill="none" stroke="var(--brass)" stroke-opacity="0.42" stroke-width="2"/>
+<circle r="138" fill="none" stroke="var(--rhumb)" stroke-opacity="0.30" stroke-width="1"/>
+<circle r="45.0" fill="none" stroke="var(--rhumb)" stroke-opacity="0.30" stroke-width="1"/>
+<g stroke="var(--brass)" stroke-opacity="0.40" stroke-width="1">
+<line x1="138.0" y1="0.0" x2="122.0" y2="0.0"/>
+<line x1="135.3" y1="26.9" x2="127.5" y2="25.4"/>
+<line x1="127.5" y1="52.8" x2="120.1" y2="49.7"/>
+<line x1="114.7" y1="76.7" x2="108.1" y2="72.2"/>
+<line x1="97.6" y1="97.6" x2="86.3" y2="86.3"/>
+<line x1="76.7" y1="114.7" x2="72.2" y2="108.1"/>
+<line x1="52.8" y1="127.5" x2="49.7" y2="120.1"/>
+<line x1="26.9" y1="135.3" x2="25.4" y2="127.5"/>
+<line x1="0.0" y1="138.0" x2="0.0" y2="122.0"/>
+<line x1="-26.9" y1="135.3" x2="-25.4" y2="127.5"/>
+<line x1="-52.8" y1="127.5" x2="-49.7" y2="120.1"/>
+<line x1="-76.7" y1="114.7" x2="-72.2" y2="108.1"/>
+<line x1="-97.6" y1="97.6" x2="-86.3" y2="86.3"/>
+<line x1="-114.7" y1="76.7" x2="-108.1" y2="72.2"/>
+<line x1="-127.5" y1="52.8" x2="-120.1" y2="49.7"/>
+<line x1="-135.3" y1="26.9" x2="-127.5" y2="25.4"/>
+<line x1="-138.0" y1="0.0" x2="-122.0" y2="0.0"/>
+<line x1="-135.3" y1="-26.9" x2="-127.5" y2="-25.4"/>
+<line x1="-127.5" y1="-52.8" x2="-120.1" y2="-49.7"/>
+<line x1="-114.7" y1="-76.7" x2="-108.1" y2="-72.2"/>
+<line x1="-97.6" y1="-97.6" x2="-86.3" y2="-86.3"/>
+<line x1="-76.7" y1="-114.7" x2="-72.2" y2="-108.1"/>
+<line x1="-52.8" y1="-127.5" x2="-49.7" y2="-120.1"/>
+<line x1="-26.9" y1="-135.3" x2="-25.4" y2="-127.5"/>
+<line x1="-0.0" y1="-138.0" x2="-0.0" y2="-122.0"/>
+<line x1="26.9" y1="-135.3" x2="25.4" y2="-127.5"/>
+<line x1="52.8" y1="-127.5" x2="49.7" y2="-120.1"/>
+<line x1="76.7" y1="-114.7" x2="72.2" y2="-108.1"/>
+<line x1="97.6" y1="-97.6" x2="86.3" y2="-86.3"/>
+<line x1="114.7" y1="-76.7" x2="108.1" y2="-72.2"/>
+<line x1="127.5" y1="-52.8" x2="120.1" y2="-49.7"/>
+<line x1="135.3" y1="-26.9" x2="127.5" y2="-25.4"/>
+</g>
+<polygon points="65.8,65.8 -9.9,9.9 0,0" fill="var(--rhumb)" fill-opacity="0.26"/><polygon points="65.8,65.8 0,0 9.9,-9.9" fill="var(--rhumb)" fill-opacity="0.13"/>
+<polygon points="-65.8,65.8 -9.9,-9.9 0,0" fill="var(--rhumb)" fill-opacity="0.26"/><polygon points="-65.8,65.8 0,0 9.9,9.9" fill="var(--rhumb)" fill-opacity="0.13"/>
+<polygon points="-65.8,-65.8 9.9,-9.9 0,0" fill="var(--rhumb)" fill-opacity="0.26"/><polygon points="-65.8,-65.8 0,0 -9.9,9.9" fill="var(--rhumb)" fill-opacity="0.13"/>
+<polygon points="65.8,-65.8 9.9,9.9 0,0" fill="var(--rhumb)" fill-opacity="0.26"/><polygon points="65.8,-65.8 0,0 -9.9,-9.9" fill="var(--rhumb)" fill-opacity="0.13"/>
+<polygon points="138.0,0.0 0.0,17.0 0,0" fill="var(--rhumb)" fill-opacity="0.26"/><polygon points="138.0,0.0 0,0 -0.0,-17.0" fill="var(--rhumb)" fill-opacity="0.13"/>
+<polygon points="0.0,138.0 -17.0,0.0 0,0" fill="var(--rhumb)" fill-opacity="0.26"/><polygon points="0.0,138.0 0,0 17.0,-0.0" fill="var(--rhumb)" fill-opacity="0.13"/>
+<polygon points="-138.0,0.0 -0.0,-17.0 0,0" fill="var(--rhumb)" fill-opacity="0.26"/><polygon points="-138.0,0.0 0,0 0.0,17.0" fill="var(--rhumb)" fill-opacity="0.13"/>
+<polygon points="-0.0,-138.0 17.0,-0.0 0,0" fill="var(--rhumb)" fill-opacity="0.26"/><polygon points="-0.0,-138.0 0,0 -17.0,0.0" fill="var(--rhumb)" fill-opacity="0.13"/>
+<polygon points="0,-138.0 9,0 -9,0" fill="var(--oxblood)" fill-opacity="0.42"/>
+<polygon points="0,-138.0 9,0 0,0" fill="var(--oxblood)" fill-opacity="0.55"/>
+<circle r="7" fill="var(--oxblood)" fill-opacity="0.5"/>
+<circle r="3" fill="var(--rhumb)" fill-opacity="0.5"/>
+<g font-family="Cinzel, serif" font-weight="700" font-size="20" fill="var(--brass)" fill-opacity="0.6" text-anchor="middle">
+<text x="0.0" y="-109.0">N</text>
+<text x="116.0" y="7.0">E</text>
+<text x="0.0" y="123.0">S</text>
+<text x="-116.0" y="7.0">W</text>
+</g>
+</g>
+</svg>
+</div>
+
+
+<!-- ======== COVER ======== -->
+<div class="screen active" id="cover">
+  <div class="parchment" style="margin-bottom:22px;">
+    <svg class="corner tl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner tr" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner bl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner br" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <div class="parchment-inner" style="display:flex;flex-direction:column;align-items:center;">
+      <hr class="cover-rule"/>
+      <div class="cover-bracket-row"><span class="cover-bracket">||</span><span class="cover-main-title">《和平島畢業生・島嶼探險任務》</span><span class="cover-bracket">||</span></div>
+      <div class="cover-bracket-row"><span class="cover-bracket">||</span><span class="cover-sub-title">【時空守護者冒險書】</span><span class="cover-bracket">||</span></div>
+      <hr class="cover-rule"/>
+      <hr class="cover-divider"/>
+      <div class="cover-intro">銘祥、品喆、宇安，恭喜你們畢業，也即將踏上新的旅程！<br/>但在離開前，你們必須接受「和平島守護者」的最後考驗。<br/>看看你們有沒有辦法猜到這些謎底在哪裡？</div>
+      <div class="cover-rules-title">📜 闖關方式</div>
+      <div class="cover-rule-item"><span class="rule-num">1</span><span>三人合力解開謎題，抵達謎底所指地點。</span></div>
+      <div class="cover-rule-item"><span class="rule-num">2</span><span>依照指示完成任務拍照，照片中要有三個人才算過關。</span></div>
+      <div class="cover-rule-item"><span class="rule-num">3</span><span>挑戰成功即可獲得秘密獎勵！</span></div>
+      <div class="prophecy-box" style="border-color:rgba(180,60,20,0.35);background:rgba(180,60,20,0.06);">
+        <div class="prophecy-text" style="color:#8B2000;">⚠️ 注意事項<br/><span style="font-weight:400;font-size:13.5px;">請勿脫隊，若有其中一人脫隊離開，<br/>就會暫停遊戲直接返回校園。</span></div>
+      </div>
+
+    </div>
+  </div>
+  <button class="btn-main" onclick="showScreen('map')">⚓ 開始冒險</button>
+</div>
+
+<!-- ======== MAP ======== -->
+<div class="screen" id="map">
+  <div class="map-header" style="margin-bottom:14px;">⚓ 和平島探險地圖</div>
+  <div class="parchment" style="margin-bottom:16px;">
+    <svg class="corner tl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner tr" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner bl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner br" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <div class="parchment-inner" style="padding:22px 20px 18px;">
+
+      <!-- Row 1: 3 tiles -->
+      <div class="stages-grid">
+
+        <div class="stage-tile" id="tile-1" onclick="openStage(1)">
+          <div class="tile-num">STAGE 1</div>
+          <div class="tile-silhouette">
+            <svg viewBox="0 0 64 64" width="58" height="58" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="26" width="36" height="10" rx="2" fill="#6B4C0E"/>
+              <rect x="6" y="24" width="10" height="14" rx="2" fill="#6B4C0E"/>
+              <rect x="44" y="28" width="14" height="7" rx="2" fill="#6B4C0E"/>
+              <line x1="28" y1="36" x2="14" y2="60" stroke="#6B4C0E" stroke-width="3" stroke-linecap="round"/>
+              <line x1="28" y1="36" x2="28" y2="62" stroke="#6B4C0E" stroke-width="3" stroke-linecap="round"/>
+              <line x1="28" y1="36" x2="42" y2="60" stroke="#6B4C0E" stroke-width="3" stroke-linecap="round"/>
+              <line x1="16" y1="56" x2="40" y2="56" stroke="#6B4C0E" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="56" cy="8" r="2" fill="#6B4C0E"/>
+              <circle cx="48" cy="4" r="1.5" fill="#6B4C0E"/>
+              <circle cx="60" cy="16" r="1" fill="#6B4C0E"/>
+            </svg>
+          </div>
+          <div class="tile-mystery">神秘地點 ?</div>
+          <div class="tile-check" id="check-1">✅</div>
+        </div>
+
+        <div class="stage-tile" id="tile-2" onclick="openStage(2)">
+          <div class="tile-num">STAGE 2</div>
+          <div class="tile-silhouette">
+            <svg viewBox="0 0 64 64" width="58" height="58" xmlns="http://www.w3.org/2000/svg">
+              <rect x="30" y="2" width="4" height="14" rx="1" fill="#6B4C0E"/>
+              <rect x="25" y="6" width="14" height="4" rx="1" fill="#6B4C0E"/>
+              <polygon points="32,16 20,32 44,32" fill="#6B4C0E"/>
+              <rect x="14" y="32" width="36" height="28" rx="1" fill="#6B4C0E"/>
+              <path d="M26 60 L26 47 Q32 39 38 47 L38 60 Z" fill="#EED98A"/>
+              <ellipse cx="22" cy="42" rx="3.5" ry="5" fill="#EED98A"/>
+              <ellipse cx="42" cy="42" rx="3.5" ry="5" fill="#EED98A"/>
+            </svg>
+          </div>
+          <div class="tile-mystery">神秘地點 ?</div>
+          <div class="tile-check" id="check-2">✅</div>
+        </div>
+
+        <div class="stage-tile" id="tile-3" onclick="openStage(3)">
+          <div class="tile-num">STAGE 3</div>
+          <div class="tile-silhouette">
+            <svg viewBox="0 0 64 64" width="58" height="58" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="9" r="7" fill="none" stroke="#6B4C0E" stroke-width="2.5"/>
+              <circle cx="32" cy="9" r="4.5" fill="#6B4C0E"/>
+              <rect x="29" y="13" width="6" height="7" rx="2" fill="#6B4C0E"/>
+              <path d="M20 24 Q32 19 44 24 L48 60 Q38 63 32 61 Q26 63 16 60 Z" fill="#6B4C0E"/>
+              <path d="M20 30 Q12 32 6 37" stroke="#6B4C0E" stroke-width="4" stroke-linecap="round" fill="none"/>
+              <path d="M44 30 Q52 32 58 37" stroke="#6B4C0E" stroke-width="4" stroke-linecap="round" fill="none"/>
+            </svg>
+          </div>
+          <div class="tile-mystery">神秘地點 ?</div>
+          <div class="tile-check" id="check-3">✅</div>
+        </div>
+
+      </div>
+
+      <!-- Row 2: 2 tiles centered -->
+      <div class="stages-row2">
+
+        <div class="stage-tile" id="tile-4" onclick="openStage(4)">
+          <div class="tile-num">STAGE 4</div>
+          <div class="tile-silhouette">
+            <svg viewBox="0 0 64 64" width="58" height="58" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="14" cy="13" r="6" fill="#6B4C0E"/>
+              <path d="M8 23 Q14 19 20 23 L22 46 Q14 48 6 46 Z" fill="#6B4C0E"/>
+              <circle cx="32" cy="10" r="7" fill="#6B4C0E"/>
+              <path d="M24 21 Q32 17 40 21 L42 48 Q32 51 22 48 Z" fill="#6B4C0E"/>
+              <circle cx="50" cy="13" r="6" fill="#6B4C0E"/>
+              <path d="M44 23 Q50 19 56 23 L58 46 Q50 48 42 46 Z" fill="#6B4C0E"/>
+            </svg>
+          </div>
+          <div class="tile-mystery">神秘地點 ?</div>
+          <div class="tile-check" id="check-4">✅</div>
+        </div>
+
+        <div class="stage-tile" id="tile-5" onclick="openStage(5)">
+          <div class="tile-num">STAGE 5</div>
+          <div class="tile-silhouette">
+            <svg viewBox="0 0 64 64" width="58" height="58" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 52 Q16 46 32 52 Q48 58 62 52 L62 57 Q48 63 32 57 Q16 51 2 57 Z" fill="#6B4C0E" opacity="0.4"/>
+              <path d="M4 46 Q32 8 60 46" stroke="#6B4C0E" stroke-width="5" fill="none" stroke-linecap="round"/>
+              <rect x="2" y="43" width="60" height="6" rx="1" fill="#6B4C0E"/>
+              <rect x="6" y="28" width="6" height="19" rx="1" fill="#6B4C0E"/>
+              <rect x="52" y="28" width="6" height="19" rx="1" fill="#6B4C0E"/>
+              <line x1="9" y1="28" x2="22" y2="43" stroke="#6B4C0E" stroke-width="1.5"/>
+              <line x1="9" y1="28" x2="35" y2="43" stroke="#6B4C0E" stroke-width="1.5"/>
+              <line x1="55" y1="28" x2="42" y2="43" stroke="#6B4C0E" stroke-width="1.5"/>
+              <line x1="55" y1="28" x2="29" y2="43" stroke="#6B4C0E" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="tile-mystery">神秘地點 ?</div>
+          <div class="tile-check" id="check-5">✅</div>
+        </div>
+
+      </div>
+
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="progress-label">已完成 0 / 5 關</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ======== UNLOCK ANIMATION OVERLAY ======== -->
+<div class="unlock-overlay" id="unlock-overlay">
+  <div class="lock-wrap">
+    <svg class="lock-svg" id="lock-svg" width="120" height="120" viewBox="0 0 120 120">
+      <!-- shackle -->
+      <path id="lock-shackle" d="M38 55 L38 38 Q38 18 60 18 Q82 18 82 38 L82 55" stroke="#E8C870" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <!-- body -->
+      <rect x="22" y="52" width="76" height="56" rx="8" fill="#E8C870"/>
+      <!-- keyhole -->
+      <circle cx="60" cy="76" r="10" fill="#6B4C0E"/>
+      <rect x="54" y="80" width="12" height="14" rx="2" fill="#6B4C0E"/>
+    </svg>
+    <div class="lock-glow" id="lock-glow"></div>
+  </div>
+  <div class="unlock-text" id="unlock-text">解鎖成功！</div>
+  <div class="unlock-stars" id="unlock-stars">✦ ✦ ✦</div>
+</div>
+
+<!-- ======== DETAIL OVERLAY ======== -->
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-card">
+    <svg class="corner tl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner tr" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner bl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner br" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+    <div class="detail-inner">
+      <div class="stage-badge" id="d-badge">⚓ STAGE 1 of 5</div>
+      <div class="card-title" id="d-title">尋找寂寞的等待者</div>
+
+      <!-- Illustration reveal (hidden until solved) -->
+      <div class="illus-reveal" id="d-illus">
+        <div id="d-illus-svg"></div>
+        <div class="illus-caption" id="d-illus-caption"></div>
+      </div>
+
+      <div class="riddle-box">
+        <div class="riddle-label">🔍 解謎線索</div>
+        <div id="d-clues"></div>
+      </div>
+
+      <div class="answer-area" id="d-answer-area">
+        <div class="answer-label">✍️ 找到地點了嗎？輸入答案解鎖祕密卡</div>
+        <div class="answer-row">
+          <input class="answer-input" id="d-input" type="text" placeholder="輸入答案…" onkeydown="if(event.key==='Enter')submitAnswer()"/>
+          <button class="btn-submit" id="d-submit" onclick="submitAnswer()">確認 →</button>
+        </div>
+        <div class="error-msg" id="d-error"></div>
+      </div>
+
+      <!-- Mission box (shown after correct answer) -->
+      <div class="mission-box" id="d-mission">
+        <div class="mission-label">🎯 關卡任務</div>
+        <div class="mission-text" id="d-mission-text"></div>
+        <button class="btn-mission" id="d-mission-btn" onclick="completeMission()">✅ 任務完成！</button>
+        <div class="mission-done-text" id="d-mission-done">任務已完成 ✓</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ======== REWARD: DRINK ======== -->
+<div class="reward-overlay" id="reward-drink">
+  <div class="reward-card">
+    <svg class="corner tl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner tr" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner bl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner br" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <div class="reward-inner">
+      <div class="reward-badge">🎉 第一關獎賞</div>
+      <div class="reward-title">飲料獎賞卡</div>
+      <div class="reward-subtitle">恭喜！你解開了第一個謎題<br/>憑此卡兌換——</div>
+      <span class="drink-anim">🧋</span>
+      <div class="reward-note">一人一杯飲料<br/>向關主出示此畫面即可兌換 🎊</div>
+      <button class="btn-reward-close" onclick="closeReward('reward-drink')">收下獎勵，繼續探險 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== REWARD: FOOD ======== -->
+<div class="reward-overlay" id="reward-food">
+  <div class="reward-card">
+    <svg class="corner tl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner tr" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner bl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner br" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <div class="reward-inner">
+      <div class="reward-badge">🎉 第二關獎賞</div>
+      <div class="reward-title">下午茶點心卡</div>
+      <div class="reward-subtitle">太厲害了！連第二關都破解了<br/>憑此卡兌換——</div>
+      <div class="food-row">
+        <span class="food-item">🍟</span>
+        <span class="food-item">🌭</span>
+        <span class="food-item">🐟</span>
+      </div>
+      <div class="reward-note">薯條 ＋ 熱狗 ＋ 炸魚塊<br/>向關主出示此畫面即可兌換 🎊</div>
+      <button class="btn-reward-close" onclick="closeReward('reward-food')">收下獎勵，繼續探險 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== FINAL OVERLAY ======== -->
+<div class="final-overlay" id="final-overlay">
+  <div class="final-card">
+    <svg class="corner tl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner tr" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner bl" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <svg class="corner br" viewBox="0 0 26 26"><path d="M2 24 L2 2 L24 2" stroke="#8B6914" stroke-width="2" fill="none"/><circle cx="2" cy="2" r="2.5" fill="#8B6914"/></svg>
+    <div class="final-inner">
+      <div class="final-stars">✦ ✦ ✦</div>
+      <div class="final-title">終極預言解封！</div>
+      <div class="final-text">
+        你們走過等嶼亭的凝望、踏過教堂的廢墟、<br/>
+        聽見媽祖千年的守護、解開三位王爺的姓氏、<br/>
+        最後站上那座跨越海洋的橋。<br/><br/>
+        這座小島見證了你們的童年。<br/>
+        而現在，你們也將成為它記憶的一部分。<br/><br/>
+        <strong>帶著和平島的祝福，勇敢出發吧。</strong>
+      </div>
+      <div class="final-stamp">✦ 和平島守護者認證 ✦</div><br/>
+      <button class="btn-main" onclick="document.getElementById('final-overlay').classList.remove('show')" style="margin-top:8px;">回到地圖</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STAGES = {
+  1: {
+    badge: '⚓ STAGE 1 of 5',
+    title: '尋找寂寞的等待者',
+    clues: [
+      '我的名字，藏著一個諧音秘密⸺有人說我在「等雨停」',
+      '我等待的，是一座永遠不會靠岸的小島',
+      '站在這裡，你能看見整片和平島的海'
+    ],
+    answers: ['等嶼亭','和平島公園'],
+    mission: '📸 拍一張瞭望遠方的帥照，向關主出示！',
+    illusCaption: '等嶼亭・解鎖',
+    illusSvg: `<svg width="130" height="140" viewBox="0 0 120 128">
+      <text x="92" y="16" fill="#8B6914" font-size="15" opacity="0.7">★</text>
+      <text x="65" y="28" fill="#8B6914" font-size="10" opacity="0.5">★</text>
+      <text x="100" y="36" fill="#8B6914" font-size="8" opacity="0.4">★</text>
+      <rect x="18" y="54" width="62" height="17" rx="3" fill="#8B6014" stroke="#5A3A08" stroke-width="1.5"/>
+      <rect x="12" y="50" width="22" height="25" rx="2" fill="#6B4A0A" stroke="#4A2A06" stroke-width="1.5"/>
+      <rect x="78" y="57" width="30" height="11" rx="2" fill="#A07020" stroke="#6A4A0C" stroke-width="1.5"/>
+      <circle cx="108" cy="62" r="9" fill="#C8D8E8" stroke="#5A3A08" stroke-width="1.5" opacity="0.9"/>
+      <circle cx="108" cy="62" r="5.5" fill="#A0B8C8" opacity="0.6"/>
+      <ellipse cx="12" cy="62" rx="7" ry="11" fill="#5A3A08" stroke="#3A2006" stroke-width="1.5"/>
+      <line x1="44" y1="71" x2="22" y2="118" stroke="#5A3A08" stroke-width="2"/>
+      <line x1="44" y1="71" x2="44" y2="122" stroke="#5A3A08" stroke-width="2"/>
+      <line x1="44" y1="71" x2="66" y2="118" stroke="#5A3A08" stroke-width="2"/>
+      <line x1="20" y1="112" x2="68" y2="112" stroke="#5A3A08" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <path d="M5 100 Q18 94 32 100 Q46 106 60 100" stroke="#5A8AB0" stroke-width="1.5" fill="none" opacity="0.5"/>
+    </svg>`
+  },
+  2: {
+    badge: '⚓ STAGE 2 of 5',
+    title: '地底下的時空裂縫',
+    clues: [
+      '西班牙人的帆船，在 1626 年駛進這片海灣',
+      '他們留下的城堡，藏在停車場的地底下',
+      '四百年前的禱告聲，至今還在磚縫間迴響'
+    ],
+    answers: ['諸聖教堂','教堂遺址','聖薩爾瓦多城','聖薩爾瓦多'],
+    mission: '😱 拍下你的震驚表情合照，向關主出示！',
+    illusCaption: '諸聖教堂遺址・解鎖',
+    illusSvg: `<svg width="130" height="140" viewBox="0 0 120 128">
+      <path d="M12 74 Q18 92 60 97 Q102 92 108 74 L98 68 L22 68 Z" fill="#6B3A0A" stroke="#3A1A06" stroke-width="1.5"/>
+      <rect x="22" y="60" width="76" height="11" rx="2" fill="#8B5210" stroke="#5A3008" stroke-width="1.5"/>
+      <line x1="60" y1="60" x2="60" y2="8" stroke="#5A3008" stroke-width="2"/>
+      <line x1="60" y1="22" x2="32" y2="38" stroke="#5A3008" stroke-width="1.5"/>
+      <line x1="82" y1="62" x2="82" y2="22" stroke="#5A3008" stroke-width="1.5"/>
+      <path d="M60 10 L60 40 L32 34 Z" fill="#E8D098" stroke="#B09050" stroke-width="1"/>
+      <path d="M60 10 L60 40 L88 34 Z" fill="#E8D098" stroke="#B09050" stroke-width="1"/>
+      <path d="M40 24 L40 40 L24 35 Z" fill="#DFC080" stroke="#B09050" stroke-width="1"/>
+      <path d="M82 24 L82 40 L100 35 Z" fill="#D8B870" stroke="#B09050" stroke-width="1"/>
+      <path d="M5 92 Q22 86 40 92 Q58 98 76 92 Q94 86 112 92" stroke="#5A8AB0" stroke-width="2" fill="none" opacity="0.6"/>
+      <rect x="56" y="6" width="9" height="7" rx="1" fill="#C0200A"/>
+      <text x="26" y="122" fill="#7A5010" font-size="11" font-family="serif" font-weight="bold" opacity="0.75">1626</text>
+    </svg>`
+  },
+  3: {
+    badge: '⚓ STAGE 3 of 5',
+    title: '守護童年的最強鄰居',
+    clues: [
+      '她是阿嬤級的女神，守護著漁人的平安',
+      '你們從小走過我門口千百次，卻不一定知道我的故事',
+      '她的名字，和大海的主人有關'
+    ],
+    answers: ['天后宮','媽祖'],
+    mission: '🫡 向女神行畢業致敬禮，向關主出示照片！',
+    illusCaption: '天后宮・解鎖',
+    illusSvg: `<svg width="130" height="140" viewBox="0 0 120 128">
+      <path d="M5 100 Q28 93 52 100 Q76 107 100 100 Q112 96 120 100" stroke="#5A8AB0" stroke-width="2" fill="none" opacity="0.5"/>
+      <path d="M18 74 L60 46 L102 74 Z" fill="#C02010" stroke="#7A0A05" stroke-width="1.5"/>
+      <path d="M18 74 L6 64 L18 74 Z" fill="#D03020" stroke="#7A0A05" stroke-width="1"/>
+      <path d="M102 74 L114 64 L102 74 Z" fill="#D03020" stroke="#7A0A05" stroke-width="1"/>
+      <circle cx="60" cy="45" r="6" fill="#D4A020" stroke="#8B6010" stroke-width="1.5"/>
+      <line x1="24" y1="74" x2="96" y2="74" stroke="#8B6010" stroke-width="2"/>
+      <path d="M30 84 L60 62 L90 84 Z" fill="#A01808" stroke="#7A0A05" stroke-width="1.5"/>
+      <rect x="30" y="82" width="60" height="32" fill="#E8C870" stroke="#B09020" stroke-width="1.5"/>
+      <path d="M48 114 L48 96 Q60 87 72 96 L72 114 Z" fill="#6B3A0A" stroke="#4A2006" stroke-width="1"/>
+      <rect x="24" y="76" width="9" height="14" rx="2" fill="#E03010" stroke="#A01008" stroke-width="1"/>
+      <rect x="87" y="76" width="9" height="14" rx="2" fill="#E03010" stroke="#A01008" stroke-width="1"/>
+    </svg>`
+  },
+  4: {
+    badge: '⚓ STAGE 4 of 5',
+    title: '三大家族的古老盟約',
+    clues: [
+      '這裡供奉著一艘帥氣的大船⸺王船',
+      '三兄弟在夏季來臨時都要一起出遊',
+      '一個有兩棵樹、一個不冷也不熱、一個是爸爸的別稱'
+    ],
+    answers: ['林溫傅','林、溫、傅','社靈廟','林温傅'],
+    mission: '🛶 擺出划船動作，大喊「船隊出發」！向關主出示照片！',
+    illusCaption: '社靈廟・解鎖',
+    illusSvg: `<svg width="130" height="140" viewBox="0 0 120 128">
+      <path d="M8 76 Q14 94 60 100 Q106 94 112 76 L100 70 L20 70 Z" fill="#5A3208" stroke="#3A1806" stroke-width="2"/>
+      <rect x="20" y="62" width="80" height="12" rx="2" fill="#7A4810" stroke="#5A2808" stroke-width="1.5"/>
+      <line x1="60" y1="62" x2="60" y2="8" stroke="#4A2808" stroke-width="2"/>
+      <line x1="84" y1="66" x2="84" y2="20" stroke="#4A2808" stroke-width="1.5"/>
+      <path d="M60 10 Q44 24 32 40 L60 38 Z" fill="#C8A050" stroke="#907030" stroke-width="1"/>
+      <path d="M60 10 Q74 24 86 40 L60 38 Z" fill="#B89040" stroke="#907030" stroke-width="1"/>
+      <path d="M84 22 Q94 32 96 48 L84 48 Z" fill="#D0A858" stroke="#907030" stroke-width="1"/>
+      <text x="30" y="88" fill="#E8C870" font-size="15" font-family="serif" font-weight="bold">林</text>
+      <text x="54" y="88" fill="#E8C870" font-size="15" font-family="serif" font-weight="bold">溫</text>
+      <text x="78" y="88" fill="#E8C870" font-size="15" font-family="serif" font-weight="bold">傅</text>
+      <path d="M4 96 Q26 89 48 96 Q70 103 92 96 Q108 91 118 96" stroke="#5A8AB0" stroke-width="2" fill="none" opacity="0.55"/>
+    </svg>`
+  },
+  5: {
+    badge: '🏆 FINAL STAGE 5 of 5',
+    title: '跨越海洋的第一步',
+    clues: [
+      '台灣史上第一座跨海大橋，就在這裡',
+      '站在橋上，你能看見彼岸的彩色房子',
+      '跨過這道橋，你也正在跨越另一個人生的起點'
+    ],
+    answers: ['和平橋'],
+    mission: '👣 拍出邁向未來的照片，向關主出示！',
+    illusCaption: '和平橋・解鎖',
+    illusSvg: `<svg width="130" height="140" viewBox="0 0 120 128">
+      <circle cx="100" cy="20" r="12" fill="#E8C040" opacity="0.5"/>
+      <line x1="100" y1="5" x2="100" y2="1" stroke="#E8C040" stroke-width="1.5" opacity="0.5"/>
+      <line x1="112" y1="10" x2="115" y2="7" stroke="#E8C040" stroke-width="1.5" opacity="0.5"/>
+      <line x1="114" y1="20" x2="118" y2="20" stroke="#E8C040" stroke-width="1.5" opacity="0.5"/>
+      <path d="M0 90 Q30 82 60 90 Q90 98 120 90 L120 128 L0 128 Z" fill="#4A7090" opacity="0.2"/>
+      <line x1="22" y1="42" x2="6" y2="78" stroke="#5A3A08" stroke-width="1.2"/>
+      <line x1="22" y1="42" x2="22" y2="78" stroke="#5A3A08" stroke-width="1.2"/>
+      <line x1="22" y1="42" x2="38" y2="78" stroke="#5A3A08" stroke-width="1.2"/>
+      <line x1="22" y1="42" x2="54" y2="78" stroke="#5A3A08" stroke-width="1.2"/>
+      <line x1="98" y1="42" x2="80" y2="78" stroke="#5A3A08" stroke-width="1.2"/>
+      <line x1="98" y1="42" x2="98" y2="78" stroke="#5A3A08" stroke-width="1.2"/>
+      <line x1="98" y1="42" x2="114" y2="78" stroke="#5A3A08" stroke-width="1.2"/>
+      <line x1="98" y1="42" x2="66" y2="78" stroke="#5A3A08" stroke-width="1.2"/>
+      <rect x="16" y="30" width="12" height="52" rx="1" fill="#6B4A0A" stroke="#3A2006" stroke-width="1.5"/>
+      <rect x="92" y="30" width="12" height="52" rx="1" fill="#6B4A0A" stroke="#3A2006" stroke-width="1.5"/>
+      <rect x="14" y="22" width="16" height="12" rx="1" fill="#8B6214" stroke="#5A3A08" stroke-width="1.5"/>
+      <rect x="90" y="22" width="16" height="12" rx="1" fill="#8B6214" stroke="#5A3A08" stroke-width="1.5"/>
+      <rect x="2" y="76" width="116" height="7" rx="1" fill="#A08040" stroke="#6A5020" stroke-width="1.5"/>
+      <line x1="6" y1="79" x2="114" y2="79" stroke="#E8C870" stroke-width="1" stroke-dasharray="8,6"/>
+      <ellipse cx="44" cy="85" rx="4.5" ry="2.8" fill="#5A3A08" opacity="0.38" transform="rotate(-12 44 85)"/>
+      <ellipse cx="56" cy="83" rx="4.5" ry="2.8" fill="#5A3A08" opacity="0.38" transform="rotate(12 56 83)"/>
+      <ellipse cx="68" cy="85" rx="4.5" ry="2.8" fill="#5A3A08" opacity="0.38" transform="rotate(-12 68 85)"/>
+      <path d="M4 98 Q28 91 52 98 Q76 105 100 98 Q112 94 120 98" stroke="#5A8AB0" stroke-width="1.8" fill="none" opacity="0.5"/>
+    </svg>`
+  }
+};
+
+// State
+const solved = {};      // stageNum -> true
+const missionDone = {}; // stageNum -> true
+let currentStage = null;
+let rewardCount = 0;    // how many missions completed (for reward sequencing)
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function openStage(n) {
+  currentStage = n;
+  const s = STAGES[n];
+  document.getElementById('d-badge').textContent = s.badge;
+  document.getElementById('d-title').textContent = s.title;
+
+  // clues
+  const cluesEl = document.getElementById('d-clues');
+  cluesEl.innerHTML = s.clues.map(c => `<div class="clue-line"><span class="clue-bullet">▸</span><span>${c}</span></div>`).join('');
+
+  // illustration: show if already solved
+  const illusEl = document.getElementById('d-illus');
+  const illusSvgEl = document.getElementById('d-illus-svg');
+  const illusCap = document.getElementById('d-illus-caption');
+  if (solved[n]) {
+    illusSvgEl.innerHTML = s.illusSvg;
+    illusCap.textContent = s.illusCaption;
+    illusEl.classList.add('show');
+  } else {
+    illusEl.classList.remove('show');
+    illusSvgEl.innerHTML = '';
+  }
+
+  // answer input
+  const inputEl = document.getElementById('d-input');
+  const submitEl = document.getElementById('d-submit');
+  const answerArea = document.getElementById('d-answer-area');
+  inputEl.value = '';
+  inputEl.className = 'answer-input';
+  document.getElementById('d-error').textContent = '';
+
+  if (solved[n]) {
+    inputEl.value = '';
+    inputEl.placeholder = '✓ 已解鎖';
+    inputEl.disabled = true;
+    submitEl.style.display = 'none';
+    document.querySelector('.detail-card').classList.add('detail-solved');
+  } else {
+    inputEl.placeholder = '輸入答案…';
+    inputEl.disabled = false;
+    submitEl.style.display = '';
+    document.querySelector('.detail-card').classList.remove('detail-solved');
+  }
+
+  // mission box
+  const missionBox = document.getElementById('d-mission');
+  const missionBtn = document.getElementById('d-mission-btn');
+  const missionDoneText = document.getElementById('d-mission-done');
+  document.getElementById('d-mission-text').textContent = s.mission;
+
+  if (solved[n]) {
+    missionBox.classList.add('show');
+    if (missionDone[n]) {
+      missionBtn.style.display = 'none';
+      missionDoneText.style.display = 'block';
+    } else {
+      missionBtn.style.display = '';
+      missionDoneText.style.display = 'none';
+    }
+  } else {
+    missionBox.classList.remove('show');
+  }
+
+  document.getElementById('detail-overlay').classList.add('show');
+  setTimeout(() => { if (!solved[n]) document.getElementById('d-input').focus(); }, 100);
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('show');
+  currentStage = null;
+}
+
+function normalize(str) {
+  return str.trim().replace(/[\s、，,・·]/g,'').toLowerCase();
+}
+
+function submitAnswer() {
+  const n = currentStage;
+  const input = document.getElementById('d-input');
+  const errEl = document.getElementById('d-error');
+  const val = normalize(input.value);
+
+  if (!val) { errEl.textContent = '請輸入答案喔！'; input.classList.add('error'); return; }
+
+  const matched = STAGES[n].answers.some(k => val.includes(normalize(k)) || normalize(k).includes(val));
+
+  if (matched) {
+    solved[n] = true;
+    input.value = '';
+    input.placeholder = '✓ 已解鎖';
+    input.disabled = true;
+    input.classList.add('correct');
+    document.getElementById('d-submit').style.display = 'none';
+    errEl.textContent = '';
+    updateMapTile(n);
+
+    // close detail, show unlock animation
+    closeDetail();
+    showUnlockAnim(n);
+  } else {
+    input.classList.add('error');
+    input.classList.remove('correct');
+    errEl.textContent = '再想想看……線索還有祕密沒解開喔！';
+    input.focus();
+  }
+}
+
+function completeMission() {
+  const n = currentStage;
+  missionDone[n] = true;
+  document.getElementById('d-mission-btn').style.display = 'none';
+  document.getElementById('d-mission-done').style.display = 'block';
+
+  // count total missions done
+  const totalDone = Object.keys(missionDone).length;
+
+  // close detail first, then show reward
+  closeDetail();
+  setTimeout(() => {
+    if (totalDone === 1) {
+      document.getElementById('reward-drink').classList.add('show');
+    } else if (totalDone === 2) {
+      document.getElementById('reward-food').classList.add('show');
+    } else if (totalDone === 3) {
+      document.getElementById('final-overlay').classList.add('show');
+    }
+  }, 300);
+}
+
+
+function showUnlockAnim(n) {
+  const overlay = document.getElementById('unlock-overlay');
+  const shackle = document.getElementById('lock-shackle');
+  const glow = document.getElementById('lock-glow');
+  const text = document.getElementById('unlock-text');
+  const stars = document.getElementById('unlock-stars');
+
+  // reset
+  shackle.setAttribute('d', 'M38 55 L38 38 Q38 18 60 18 Q82 18 82 38 L82 55');
+  glow.classList.remove('burst');
+  text.classList.remove('show');
+  stars.classList.remove('show');
+
+  overlay.classList.add('show');
+
+  // step 1: shackle opens (rises up)
+  setTimeout(() => {
+    shackle.setAttribute('d', 'M38 35 L38 20 Q38 0 60 0 Q82 0 82 20 L82 35');
+    shackle.style.transition = 'all 0.4s ease';
+    glow.classList.add('burst');
+  }, 600);
+
+  // step 2: text appears
+  setTimeout(() => {
+    text.classList.add('show');
+    stars.classList.add('show');
+  }, 800);
+
+  // step 3: after animation, open solved detail
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    openSolvedDetail(n);
+  }, 2200);
+}
+
+function openSolvedDetail(n) {
+  currentStage = n;
+  const s = STAGES[n];
+  document.getElementById('d-badge').textContent = s.badge;
+  document.getElementById('d-title').textContent = s.title;
+  document.getElementById('d-clues').innerHTML = '';
+
+  // show illustration
+  const illusEl = document.getElementById('d-illus');
+  const illusSvgEl = document.getElementById('d-illus-svg');
+  document.getElementById('d-illus-caption').textContent = s.illusCaption;
+  illusSvgEl.innerHTML = s.illusSvg;
+  illusEl.classList.add('show');
+
+  // hide riddle + answer
+  document.querySelector('.detail-card').classList.add('detail-solved');
+
+  // show mission
+  document.getElementById('d-mission').classList.add('show');
+  document.getElementById('d-mission-btn').style.display = '';
+  document.getElementById('d-mission-done').style.display = 'none';
+  document.getElementById('d-error').textContent = '';
+
+  document.getElementById('detail-overlay').classList.add('show');
+}
+
+function closeReward(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+function updateMapTile(n) {
+  const tile = document.getElementById('tile-' + n);
+  tile.classList.add('done');
+  document.getElementById('check-' + n).style.display = 'block';
+
+  const count = Object.keys(solved).length;
+  document.getElementById('progress-fill').style.width = (count / 5 * 100) + '%';
+  document.getElementById('progress-label').textContent = '已完成 ' + count + ' / 5 關';
+}
+</script>
+</body>
+</html>
