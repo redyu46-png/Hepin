@@ -137,9 +137,39 @@ body {
 .stage-tile.done .tile-silhouette svg { fill: #3A6A28; }
 .tile-check { font-size: 16px; position: absolute; top: 5px; right: 7px; display: none; }
 
-.progress-bar-wrap { width: 100%; background: rgba(139,105,20,0.2); border-radius: 4px; height: 8px; margin-bottom: 4px; }
-.progress-bar-fill { height: 8px; background: #6B4C0E; border-radius: 4px; transition: width 0.6s ease; }
-.progress-label { font-family: 'Cinzel','Noto Serif TC', serif; font-size: 12px; color: #E6D4A0; text-align: center; letter-spacing: 0.04em; }
+/* ── adventure trail with the three explorers ── */
+.trail { position: relative; width: 100%; height: 56px; margin-bottom: 6px; }
+.trail-bar {
+  position: absolute; left: 16px; right: 16px; bottom: 7px; height: 9px;
+  background: rgba(139,105,20,0.22); border: 1px solid rgba(100,65,15,0.28);
+  border-radius: 5px; overflow: hidden;
+}
+.trail-fill {
+  height: 100%; width: 0%; border-radius: 5px;
+  background: linear-gradient(90deg, #9A6E18, #6B4C0E);
+  transition: width 0.7s ease;
+}
+.trail-start, .trail-goal { position: absolute; bottom: 2px; font-size: 17px; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25)); }
+.trail-start { left: -3px; }
+.trail-goal { right: -3px; }
+.walkers {
+  position: absolute; bottom: 13px; left: 6px; width: 112px;
+  display: flex; align-items: flex-end; justify-content: center;
+  transition: left 0.85s cubic-bezier(0.34,1.1,0.6,1);
+}
+.walker { display: flex; flex-direction: column; align-items: center; width: 37px; }
+.boy { display: block; animation: bob 2.4s ease-in-out infinite; }
+.walker:nth-child(2) .boy { animation-delay: 0.35s; }
+.walker:nth-child(3) .boy { animation-delay: 0.7s; }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+.walker-name {
+  font-family: 'Noto Serif TC', serif; font-size: 9px; font-weight: 700;
+  color: #4A3000; margin-top: -2px; letter-spacing: 0.02em; white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(255,248,220,0.6);
+}
+.walkers.cheer .boy { animation: cheer 0.55s ease 3; }
+@keyframes cheer { 0%,100% { transform: translateY(0); } 45% { transform: translateY(-8px); } }
+.progress-label { font-family: 'Cinzel','Noto Serif TC', serif; font-size: 12.5px; font-weight: 700; color: #6B4C0E; text-align: center; letter-spacing: 0.04em; text-shadow: 0 1px 0 rgba(255,248,220,0.55); }
 
 /* ── DETAIL PANEL (modal-style overlay) ── */
 .detail-overlay {
@@ -161,7 +191,7 @@ body {
   background: repeating-linear-gradient(0deg, transparent, transparent 29px, rgba(150,110,50,0.055) 29px, rgba(150,110,50,0.055) 30px);
   border-radius: 4px; pointer-events: none; z-index: 1;
 }
-.detail-inner { position: relative; z-index: 2; padding: 28px 28px 16px; }
+.detail-inner { position: relative; z-index: 2; padding: 28px 28px 24px; }
 
 .detail-close { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 20px; color: #7A5010; cursor: pointer; z-index: 10; line-height: 1; }
 .detail-close:hover { color: #3D2800; }
@@ -175,19 +205,15 @@ body {
 .clue-bullet { color: #8B6914; flex-shrink: 0; }
 
 /* answer */
-.answer-area { border-top: 1.5px solid rgba(100,65,15,0.22); padding-top: 12px; margin-bottom: 0;
-  position: sticky; bottom: 0; background: #EED98A;
-  box-shadow: 0 -8px 16px -6px rgba(120,85,30,0.45);
-  padding-bottom: 4px; z-index: 5;
-}
+.answer-area { border-top: 1.5px solid rgba(100,65,15,0.22); padding-top: 12px; margin-bottom: 0; }
 .answer-label { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: #7A5010; margin-bottom: 8px; }
-.answer-row { display: flex; gap: 8px; align-items: center; width: 100%; }
-.answer-input { flex: 1 1 auto; min-width: 0; background: rgba(255,255,255,0.45); border: 1.5px solid rgba(100,65,15,0.35); border-radius: 3px; padding: 8px 12px; font-family: 'Noto Serif TC', serif; font-size: 15px; color: #3D2800; outline: none; transition: border-color 0.2s; }
+.answer-row { display: flex; gap: 8px; align-items: center; }
+.answer-input { flex: 1; background: rgba(255,255,255,0.45); border: 1.5px solid rgba(100,65,15,0.35); border-radius: 3px; padding: 8px 12px; font-family: 'Noto Serif TC', serif; font-size: 15px; color: #3D2800; outline: none; transition: border-color 0.2s; }
 .answer-input:focus { border-color: #8B6914; background: rgba(255,255,255,0.65); }
 .answer-input.error { border-color: #C03010; background: rgba(255,200,180,0.3); }
 .answer-input.correct { border-color: #3A7A30; background: rgba(180,240,180,0.3); }
 .answer-input:disabled { opacity: 0.7; cursor: not-allowed; }
-.btn-submit { flex: 0 0 auto; background: #6B4C0E; color: #F5E4A0; border: 1.5px solid #A07020; border-radius: 3px; padding: 8px 16px; font-family: 'Noto Serif TC', serif; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+.btn-submit { background: #6B4C0E; color: #F5E4A0; border: 1.5px solid #A07020; border-radius: 3px; padding: 8px 16px; font-family: 'Noto Serif TC', serif; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
 .btn-submit:hover { background: #8B6214; }
 .error-msg { font-size: 12px; color: #C03010; margin-top: 6px; font-family: 'Noto Serif TC', serif; min-height: 18px; }
 
@@ -660,8 +686,56 @@ body {
 
       </div>
 
-      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
-      <div class="progress-label" id="progress-label">已完成 0 / 5 關</div>
+      <div class="trail">
+        <span class="trail-start" title="啟程">⚓</span>
+        <span class="trail-goal" title="終點">🏁</span>
+        <div class="trail-bar"><div class="trail-fill" id="progress-fill"></div></div>
+        <div class="walkers" id="walkers">
+          <div class="walker">
+            <svg class="boy" viewBox="0 0 30 40" width="24" height="32">
+              <rect x="11" y="29" width="3.2" height="9" rx="1.6" fill="#5A3A08"/>
+              <rect x="15.6" y="29" width="3.2" height="9" rx="1.6" fill="#5A3A08"/>
+              <path d="M8.5 19 Q15 16 21.5 19 L20.5 30 Q15 32 9.5 30 Z" fill="#a8371d"/>
+              <path d="M9.5 20 Q6 23 7 27" stroke="#E8C9A0" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+              <path d="M20.5 20 Q24 17.5 26.5 14.5" stroke="#E8C9A0" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+              <rect x="24" y="12" width="7" height="3" rx="1.2" fill="#5A3A08" transform="rotate(-26 27.5 13.5)"/>
+              <circle cx="15" cy="11" r="6" fill="#E8C9A0"/>
+              <path d="M9 11 Q9.5 4.5 15 4.5 Q20.5 4.5 21 11 Q18 7.5 15 7.5 Q12 7.5 9 11 Z" fill="#3A2406"/>
+            </svg>
+            <span class="walker-name">銘祥</span>
+          </div>
+          <div class="walker">
+            <svg class="boy" viewBox="0 0 30 40" width="24" height="32">
+              <rect x="11" y="29" width="3.2" height="9" rx="1.6" fill="#5A3A08"/>
+              <rect x="15.6" y="29" width="3.2" height="9" rx="1.6" fill="#5A3A08"/>
+              <path d="M8.5 19 Q15 16 21.5 19 L20.5 30 Q15 32 9.5 30 Z" fill="#b07d1e"/>
+              <path d="M9.5 20 Q7 23 9 25.5" stroke="#E8C9A0" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+              <path d="M20.5 20 Q23 23 21 25.5" stroke="#E8C9A0" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+              <rect x="9.5" y="22" width="11" height="7.5" rx="1" fill="#EBD9A6" stroke="#6B4C0E" stroke-width="0.9"/>
+              <line x1="12" y1="24.5" x2="18" y2="24.5" stroke="#9A7A2A" stroke-width="0.7"/>
+              <line x1="12" y1="26.5" x2="17" y2="26.5" stroke="#9A7A2A" stroke-width="0.7"/>
+              <circle cx="15" cy="11" r="6" fill="#E8C9A0"/>
+              <path d="M9 11 Q8.5 4 15 4 Q21.5 4 21 11 Q20 8 15 8 Q12 6.5 9 11 Z" fill="#2A1A06"/>
+            </svg>
+            <span class="walker-name">品喆</span>
+          </div>
+          <div class="walker">
+            <svg class="boy" viewBox="0 0 30 40" width="24" height="32">
+              <rect x="11" y="29" width="3.2" height="9" rx="1.6" fill="#5A3A08"/>
+              <rect x="15.6" y="29" width="3.2" height="9" rx="1.6" fill="#5A3A08"/>
+              <path d="M8.5 19 Q15 16 21.5 19 L20.5 30 Q15 32 9.5 30 Z" fill="#2a6b6b"/>
+              <path d="M9.5 20 Q6 23 7 27" stroke="#E8C9A0" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+              <path d="M20.5 19.5 Q24.5 16 26 11" stroke="#E8C9A0" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+              <line x1="26" y1="4" x2="26" y2="13" stroke="#5A3A08" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M26 4.5 L31 6 L26 8 Z" fill="#a8371d"/>
+              <circle cx="15" cy="11" r="6" fill="#E8C9A0"/>
+              <path d="M8.8 10.5 Q11 4 15 4.5 Q19 4 21 10.5 Q19 8 16 8.2 Q12.5 8 10.5 10 Q9.5 9 8.8 10.5 Z" fill="#3A2406"/>
+            </svg>
+            <span class="walker-name">宇安</span>
+          </div>
+        </div>
+      </div>
+      <div class="progress-label" id="progress-label">三人小隊 ・ 啟程出發!</div>
     </div>
   </div>
 </div>
@@ -1311,8 +1385,22 @@ function updateMapTile(n) {
   document.getElementById('check-' + n).style.display = 'block';
 
   const count = Object.keys(solved).length;
-  document.getElementById('progress-fill').style.width = (count / 5 * 100) + '%';
-  document.getElementById('progress-label').textContent = '已完成 ' + count + ' / 5 關';
+  const frac = count / 5;
+  document.getElementById('progress-fill').style.width = (frac * 100) + '%';
+
+  // move the three explorers along the trail
+  const walkers = document.getElementById('walkers');
+  walkers.style.left = 'calc(6px + (100% - 124px) * ' + frac + ')';
+
+  const label = document.getElementById('progress-label');
+  if (count >= 5) {
+    label.textContent = '🎉 三人小隊抵達終點 ・ 5 / 5 關全破!';
+    walkers.classList.remove('cheer');
+    void walkers.offsetWidth;       // restart animation
+    walkers.classList.add('cheer');
+  } else {
+    label.textContent = '三人小隊前進中 ・ 已完成 ' + count + ' / 5 關';
+  }
 }
 </script>
 </body>
